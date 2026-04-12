@@ -362,3 +362,16 @@ All conflicts fixed とある。コンフリクトにより失敗したマージ
 - `git push origin ブランチ名`
 
 プルリクエストでコンフリクトメッセージが出ていた場合は、これにてマージができるようになっている。
+
+## ひとりでGit/GitHubを嗜む
+
+- ローカルリポジトリを作成したいところで `git init`
+- コミットがゼロだと何もできないので[Untracked]ファイルを `git add ファイル名` して `git commit -m “メッセージ”` する
+- `git commit -am "メッセージ"` や `git branch ブランチ名` や `git merge ブランチ名` などでGitで管理
+- リモートリポジトリと連携したくなったら、まずGitHubで [New repository]
+- 必要項目入力したら [Create repository]
+- SSH接続用のURLをコピーする
+- リモートリポジトリ名をoriginとするなら、次のコマンドを実行
+- `git remote add origin コピーしたURL`
+- `git remote -v` を実行してリモートリポジトリのパスが出れば接続成功
+- `git push origin main` でプッシュすれば完了
