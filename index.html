@@ -32,29 +32,31 @@
             <h2>初期設定</h2>
 
             <h3>Git</h3>
-            <p>最初に一度だけ設定。Gitの設定に関しては git config というコマンドを利用する。—global オプションを付けることで、ホームディレクトリの .gitconfig というファイルに設定が保存されていく。設定した後に、逐一 <code>git config 設定項目名</code> を実行して確認するとよい。</p>
+            <p>最初に一度だけ設定。Gitの設定に関しては git config というコマンドを利用する。
+                —global オプションを付けることで、ホームディレクトリの .gitconfig というファイルに設定が保存されていく。
+                設定した後に、逐一 <code>git config 設定項目名</code> を実行して確認するとよい。</p>
 
             <ul>
                 <li><code>git config --list</code>
                     <ul>
-                        <li>現在のGitの**設定一覧を表示**。</li>
+                        <li>現在のGitの設定一覧を表示。</li>
                     </ul>
                 </li>
                 <li><code>git config --global user.name "Your Name"</code>
                     <ul>
-                        <li>コミットに表示される**名前**を設定。</li>
+                        <li>コミットに表示される名前を設定。</li>
                     </ul>
                 </li>
                 <li><code>git config --global user.email "your_email@example.com"</code>
                     <ul>
-                        <li>コミットに表示される**メールアドレス**を設定。</li>
+                        <li>コミットに表示されるメールアドレスを設定。</li>
                     </ul>
                 </li>
                 <li><code>git config --global core.editor "code --wait"</code>
                     <ul>
                         <li><code>code</code>はVS Codeを起動するコマンド。VS Codeインストール時にcodeという名前でpathに登録されているはず。</li>
-                        <li><code>-wait</code>オプションは、VS Codeでファイルを開いた後、その**ファイルを閉じるまでGitの処理を待機させる**ために必要。これがないと、エディタが起動した瞬間にGitが「編集が終わった」と勘違いしてしまい、コミットメッセージなどが空になってしまう。</li>
-                        <li>つまり「**今後、Gitでエディタを使う時はいつでもVS Codeを使い、ファイルが閉じられるまで待ってください**」という設定をPC全体に適用するコマンド。</li>
+                        <li><code>-wait</code>オプションは、VS Codeでファイルを開いた後、そのファイルを閉じるまでGitの処理を待機させるために必要。これがないと、エディタが起動した瞬間にGitが「編集が終わった」と勘違いしてしまい、コミットメッセージなどが空になってしまう。</li>
+                        <li>つまり「今後、Gitでエディタを使う時はいつでもVS Codeを使い、ファイルが閉じられるまで待ってください」という設定をPC全体に適用するコマンド。</li>
                     </ul>
                 </li>
                 <li><code>git config --list</code>
