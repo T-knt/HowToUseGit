@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitとGitHubの使い方を丁寧に見やすく解説</title>
+    <title>GitとGitHubの使い方</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>GitとGitHubの使い方を丁寧に見やすく解説</h1>
+        <h1>GitとGitHubの使い方（自分向け）</h1>
 
         <p class="intro">
-            このページはgitとgithubについて、最初の初期設定から始まり、ローカルリポジトリでの基本操作、リモートリポジトリを交えたブランチ運用やコンフリクトの解消、そして個人開発での一連の流れまでを体系的にまとめた解説書です。途中で登場する複雑なコマンドについては、ページ下部にて詳細な解説を用意しています。
+            gitとgithubについて、最初の初期設定から始まり、ローカルリポジトリでの基本操作、リモートリポジトリを交えたブランチ運用やコンフリクトの解消など
+            一連の流れを粗くまとめた。途中で登場する理解したいコマンドについては、ページ下部にて詳細な解説を用意。
         </p>
 
         <div class="toc">
@@ -288,7 +289,7 @@
             </ul>
 
             <h3>ローカルリポジトリをGitHubにアップする</h3>
-            <p><a href="https://hirofurukawa.com/push-local-repos-to-github/" target="_blank">ローカルで作業した git リポジトリを GitHub にアップする手順</a></p>
+            <p><a href="#solo" class="jump-link">→ ひとりでGit/GitHubを嗜む</a>を参照</p>
         </section>
 
         <hr>
@@ -428,7 +429,7 @@
         </section>
 
         <section id="solo">
-            <h2>ひとりでGit/GitHubを嗜む</h2>
+            <h2 id="solo">ひとりでGit/GitHubを嗜む</h2>
             <ul>
                 <li>ローカルリポジトリを作成したいところで <code>git init</code></li>
                 <li>コミットがゼロだと何もできないので[Untracked]ファイルを <code>git add ファイル名</code> して <code>git commit -m “メッセージ”</code> する</li>
@@ -447,63 +448,64 @@
             <h2>コマンドの解説（詳細）</h2>
             
             <div id="exp-keygen" class="explanation-box">
-                <p>コマンドの解説</p>
-                <p>このコマンドは、GitHubなどのサーバーに安全に接続するための**「SSH鍵（秘密鍵と公開鍵のペア）」を作成する**ためのものです。</p>
-                <p>現在、セキュリティとパフォーマンスの両面で**最も推奨されている設定**のひとつです。</p>
+                <p><code>ssh-keygen -t ed25519 -C "sample@example.com"</code>の解説</p>
+                <p>このコマンドは、GitHubなどのサーバーに安全に接続するための「SSH鍵（秘密鍵と公開鍵のペア）」を作成するためのもの。</p>
+                <p>現在、セキュリティとパフォーマンスの両面で最も推奨されている設定のひとつ。</p>
                 
                 <hr>
                 
-                <h3>**コマンドの各部分の意味**</h3>
+                <h3>コマンドの各部分の意味</h3>
                 <ul>
-                    <li>**<code>ssh-keygen</code>**
+                    <li><code>ssh-keygen</code>
                         <ul>
-                            <li>SSHの鍵ペアを作成（生成）するためのプログラムを起動します。</li>
+                            <li>SSHの鍵ペアを作成（生成）するためのプログラムを起動。</li>
                         </ul>
                     </li>
-                    <li>**<code>t ed25519</code>**
+                    <li><code>t ed25519</code>
                         <ul>
-                            <li>作成する鍵の種類（アルゴリズム）を指定します。**Ed25519**は、従来のRSAよりも高速で、短い鍵長でも非常に高いセキュリティを誇る最新の形式です。</li>
+                            <li>作成する鍵の種類（アルゴリズム）を指定します。Ed25519は、従来のRSAよりも高速で、短い鍵長でも非常に高いセキュリティを誇る最新の形式。</li>
                         </ul>
                     </li>
-                    <li>**<code>C "example@gmail.com"</code>**
+                    <li><code>C "example@gmail.com"</code>
                         <ul>
-                            <li>鍵に「コメント（Comment）」を付けます。一般的には自分のメールアドレスを入力し、**「誰の、どのための鍵か」を識別しやすくする**ために使われます。</li>
+                            <li>鍵に「コメント（Comment）」を付ける。一般的には自分のメールアドレスを入力し、「誰の、どのための鍵か」を識別しやすくするために使われる。</li>
                         </ul>
                     </li>
                 </ul>
                 
-                <h3>**生成されるファイル**</h3>
-                <p>成功すると、指定した場所に**2つのファイル**がセットで作成されます。</p>
+                <h3>生成されるファイル</h3>
+                <p>成功すると、指定した場所に2つのファイルがセットで作成される。</p>
                 <ul>
-                    <li><code>id_ed25519</code> （**秘密鍵**: 自分だけの印鑑。**絶対に見せてはいけない**）</li>
-                    <li><code>id_ed25519.pub</code> （**公開鍵**: 相手に渡す鍵。GitHubの設定画面などに中身を貼り付ける）</li>
+                    <li><code>id_ed25519</code> （秘密鍵: 自分だけの印鑑。絶対に見せてはいけない）</li>
+                    <li><code>id_ed25519.pub</code> （公開鍵: 相手に渡す鍵。GitHubの設定画面などに中身を貼り付ける）</li>
                 </ul>
-                <p>この鍵を作成したあとは、GitHubなどの設定画面に「公開鍵（.pubの方）」を登録することで、パスワード入力を省略して安全に通信ができるようになります。</p>
+                <p>この鍵を作成したあとは、GitHubなどの設定画面に「公開鍵（.pubの方）」を登録することで、パスワード入力を省略して安全に通信ができるようになる。</p>
             </div>
 
             <div id="exp-ssh-test" class="explanation-box">
-                <p>コマンドの解説</p>
-                <p>このコマンドは、設定したSSH鍵を使って**GitHubとの接続が正しく行えるかを確認する「テストコマンド」**です。</p>
-                <p>新しくSSH鍵を作成してGitHubに登録したあと、実際にGit操作（pushやpull）をする前に、ちゃんと通信できるかをチェックするために使います。</p>
+                <p><code>ssh -T git@github.com</code>の解説</p>
+                <p>このコマンドは、設定したSSH鍵を使ってGitHubとの接続が正しく行えるかを確認する「テストコマンド」。</p>
+                <p>新しくSSH鍵を作成してGitHubに登録したあと、実際にGit操作（pushやpull）をする前に、ちゃんと通信できるかをチェックするために使う。</p>
                 
                 <hr>
                 
-                <h3>**コマンドの各部分の意味**</h3>
+                <h3>コマンドの各部分の意味</h3>
                 <ul>
-                    <li>**<code>ssh</code>**
+                    <li><code>ssh</code>
                         <ul>
-                            <li>SSH（セキュアな通信）を使ってサーバーに接続する命令です。</li>
+                            <li>SSH（セキュアな通信）を使ってサーバーに接続する命令。</li>
                         </ul>
                     </li>
-                    <li>**<code>T</code>**
+                    <li><code>T</code>
                         <ul>
-                            <li>「対話的な端末（ターミナル）を割り当てない」という指示です。</li>
-                            <li>GitHubのサーバーは、SSHで接続しても操作画面（シェル）を貸してくれません。このオプションを付けることで、「操作したいわけじゃなくて、**接続できるか確認したいだけです**」と伝えています。</li>
+                            <li>「対話的な端末（ターミナル）を割り当てない」という指示。</li>
+                            <li>GitHubのサーバーは、SSHで接続しても操作画面（シェル）を貸してくれない。このオプションを付けることで、
+                                「操作したいわけじゃなくて、接続できるか確認したいだけ」と伝えている。</li>
                         </ul>
                     </li>
-                    <li>**<code>git@github.com</code>**
+                    <li><code>git@github.com</code>
                         <ul>
-                            <li>接続先のアドレスです。GitHubの場合、ユーザー名は必ず <code>git</code> になります。</li>
+                            <li>接続先のアドレスです。GitHubの場合、ユーザー名は必ず <code>git</code> になる。</li>
                         </ul>
                     </li>
                 </ul>
