@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitとGitHubの使い方を丁寧に見やすく解説</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>GitとGitHubの使い方を丁寧に見やすく解説</h1>
+
+        <p class="intro">
+            このページはgitとgithubについて、最初の初期設定から始まり、ローカルリポジトリでの基本操作、リモートリポジトリを交えたブランチ運用やコンフリクトの解消、そして個人開発での一連の流れまでを体系的にまとめた解説書です。途中で登場する複雑なコマンドについては、ページ下部にて詳細な解説を用意しています。
+        </p>
+
+        <div class="toc">
+            <p class="toc-title">目次</p>
+            <ul>
+                <li><a href="#setup">初期設定</a></li>
+                <li><a href="#basic">基本</a></li>
+                <li><a href="#basic-operation">基本操作</a></li>
+                <li><a href="#fork-clone">フォークとクローン</a></li>
+                <li><a href="#branch-section">ブランチ</a></li>
+                <li><a href="#solo">ひとりでGit/GitHubを嗜む</a></li>
+                <li><a href="#command-explanation">コマンドの解説（詳細）</a></li>
+            </ul>
+        </div>
+
+        <section id="setup">
+            <h2>初期設定</h2>
+
+            <h3>Git</h3>
+            <p>最初に一度だけ設定。Gitの設定に関しては git config というコマンドを利用する。—global オプションを付けることで、ホームディレクトリの .gitconfig というファイルに設定が保存されていく。設定した後に、逐一 <code>git config 設定項目名</code> を実行して確認するとよい。</p>
+
+            <ul>
+                <li><code>git config --list</code>
+                    <ul>
+                        <li>現在のGitの**設定一覧を表示**。</li>
+                    </ul>
+                </li>
+                <li><code>git config --global user.name "Your Name"</code>
+                    <ul>
+                        <li>コミットに表示される**名前**を設定。</li>
+                    </ul>
+                </li>
+                <li><code>git config --global user.email "your_email@example.com"</code>
+                    <ul>
+                        <li>コミットに表示される**メールアドレス**を設定。</li>
+                    </ul>
+                </li>
+                <li><code>git config --global core.editor "code --wait"</code>
+                    <ul>
+                        <li><code>code</code>はVS Codeを起動するコマンド。VS Codeインストール時にcodeという名前でpathに登録されているはず。</li>
+                        <li><code>-wait</code>オプションは、VS Codeでファイルを開いた後、その**ファイルを閉じるまでGitの処理を待機させる**ために必要。これがないと、エディタが起動した瞬間にGitが「編集が終わった」と勘違いしてしまい、コミットメッセージなどが空になってしまう。</li>
+                        <li>つまり「**今後、Gitでエディタを使う時はいつでもVS Codeを使い、ファイルが閉じられるまで待ってください**」という設定をPC全体に適用するコマンド。</li>
+                    </ul>
+                </li>
+                <li><code>git config --list</code>
+                    <ul>
+                        <li>ちゃんと設定できてるか確認。</li>
+                    </ul>
+                </li>
+                <li><code>git config --global init.defaultBranch main</code>
+                    <ul>
+                        <li>デフォルトブランチの名前をmainにする。昔はmasterが主流だった。</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p>設定項目を削除したいときは以下を実行。</p>
+            <ul>
+                <li><code>git config --global --unset 設定項目名</code></li>
+            </ul>
+
+            <h3>GitHub</h3>
+            <p>手元のパソコンとGithubとで通信してデータをやりとりするには、認証という手続きが必要になる。Githubで使用できる認証方法は２つあり（2025年時点）、「HTTPというプロトコルとパーソナルアクセストークンを用いたユーザー認証」または「SSHというプロトコルと公開鍵を用いたサーバー認証」である。いづれの方法も最初にコマンドラインやブラウザー上での設定が必要。SSHを使う場合は、最初の設定以降はコマンドライン上で認証のために、ユーザー名やパーソナルアクセストークンなどを入力する必要がないので、Githubに接続する際の手順が軽減できる。</p>
+
+            <p>公開鍵による認証</p>
+            <p>ローカルでペアの秘密鍵と公開鍵を作成し、公開鍵をGithunに登録する。鍵を用いて暗号化通信を行う。<br>
+            まず鍵を作成する。作業場はCUIで、ディレクトリはホームディレクトリ(~)。</p>
+
+            <ul>
+                <li><code>ssh-keygen -t ed25519 -C "sample@example.com"</code></li>
+                <li><a href="#exp-keygen" class="jump-link">→ コマンドの解説はこちら</a></li>
+                <li>生成した鍵の保存先の絶対パスが表示されるのでEnter</li>
+                <li>パスフレーズ（パスワードみたいなもの）を入力する。今生成するSHH Key専用のパスフレーズの設定のため、GitHubとは別の新たなものを入力する。入力しても画面に表示されないことと、２回入力が必要なことに注意。</li>
+            </ul>
+
+            <p>生成した公開鍵をGitHubの設定画面に登録する。次のコマンドを実行してクリップボードにコピーする。</p>
+            <ul>
+                <li><code>clip &lt; /c/Users/ユーザー名/.ssh/id_ed25519.pub</code>
+                    <ul>
+                        <li>macOS → <code>pbcopy &lt; /c/Users/ユーザー名/.ssh/id_ed25519.pub</code></li>
+                    </ul>
+                </li>
+                <li>GitHubの [Setting] を開き、左側のメニューの [SSH and GPG Key] を選択。右上の [New SSH key] をクリック</li>
+                <li>[Title] → 後で見たときにどのパソコンで発行したキーなのかがわかる名前に。(ex. GMKのミニPC)</li>
+                <li>[Key type] → [Authentication Key] を選択</li>
+                <li>[Key] → コピーした公開鍵をペースト</li>
+                <li>入力が完了したら [Ass SSH key] をクリック</li>
+            </ul>
+
+            <p>正しく設定できたのかを確認する</p>
+            <ul>
+                <li><code>ssh -T git@github.com</code></li>
+                <li><a href="#exp-ssh-test" class="jump-link">→ コマンドの解説はこちら</a></li>
+                <li>“Are you sure you want to continue connecting (yes/no/[fingerprint])?” → yes と入力</li>
+                <li>続いて先ほど設定したパスフレーズを入力する</li>
+                <li>“Hi ユーザー名! You’ve successfully authenticated” と表示されたら成功
+                    <ul>
+                        <li>“Permission denied” と表示されたら失敗。手順をやり直す。</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p>この先ターミナル操作中にパスフレーズを聞かれたら、この値を入力すればよい。<br>
+            GitHubのパスワードと混乱しがちだが、ターミナルでGitHubのパスワードを入力する機会はない。</p>
+        </section>
+
+        <hr>
+
+        <section id="basic">
+            <h2>基本</h2>
+
+            <h3>場所の名前</h3>
+            <p>ローカルリポジトリでは３つの場所を使い分けてファイルの状態を管理する。</p>
+
+            <ul>
+                <li>ワークツリー
+                    <ul>
+                        <li>編集の開始地点</li>
+                        <li>「untracked」← 新規ファイルなどはGitの管理下に置かれていない。まずステージングする必要がある。</li>
+                        <li>「unmodified」← 最後のコミットから変更されていない状態。</li>
+                        <li>「modified」 ← なんらかの編集をすると変更済みとなる。</li>
+                    </ul>
+                </li>
+                <li>ステージングエリア</li>
+                <li>Gitディレクトリ
+                    <ul>
+                        <li>コミットした時点の変更箇所データが格納される</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <section id="basic-operation">
+            <h2>基本操作</h2>
+
+            <h3>ディレクトリとファイルを作成</h3>
+            <ul>
+                <li><code>mkdir ディレクトリ名</code></li>
+                <li><code>touch ファイル名</code></li>
+            </ul>
+
+            <h3>ローカルリポジトリを作る</h3>
+            <p>ローカルリポジトリを作りたいディレクトに移動して作る。ls -a で.gitディレクトリがあることを確認。</p>
+            <ul>
+                <li><code>cd ディレクトリ名</code></li>
+                <li><code>git init</code></li>
+                <li><code>ls -a</code></li>
+            </ul>
+
+            <h3>ステージングエリアに登録</h3>
+            <p>逐一 git status で状態を確認。</p>
+            <ul>
+                <li><code>git add ファイル名</code>
+                    <ul>
+                        <li><code>git add .</code> ← カレントディレクトリは以下のすべてのファイルを追加</li>
+                        <li><code>git add ディレクトリ名</code> ← ディレクトリは以下のすべてのファイルを追加</li>
+                        <li><code>git add ディレクトリ名/ファイル名</code> ← 指定したファイルを追加</li>
+                    </ul>
+                </li>
+                <li><code>git status</code></li>
+            </ul>
+
+            <h3>差分の確認</h3>
+            <p>文末の改行でさえ差分となる。<br>
+            ワークツリーとステージングエリアの差分</p>
+            <ul>
+                <li><code>git diff</code></li>
+            </ul>
+            <p>ステージングエリアとGitディレクトリ（前回のコミット）の差分</p>
+            <ul>
+                <li><code>git diff --cached</code></li>
+            </ul>
+
+            <h3>コミットする</h3>
+            <p>コミットメッセージを複数行書く場合</p>
+            <ul>
+                <li><code>git commit</code>
+                    <ul>
+                        <li>VSCodeが開く。一行目にコミットタイトルを書き、３行目以降に詳細を書く。保存してファイルを閉じればOK。</li>
+                    </ul>
+                </li>
+            </ul>
+            <p>コミットメッセージが一行の時</p>
+            <ul>
+                <li><code>git commit -m "メッセージ内容"</code></li>
+            </ul>
+            <p>ステージングエリアへの追加とコミットを一度に行う。追加対象となるのはGitの管理下に置かれているファイルの変更。-aと-mの合体。</p>
+            <ul>
+                <li><code>git commit -am "メッセージ内容"</code></li>
+            </ul>
+
+            <h3>ローカルリポジトリでの操作の取り消し</h3>
+            <p>ワークツリーでの変更を取り消したいとき、git restoreコマンドを使えば、直前のコミットの状態に戻すことができる。</p>
+            <ul>
+                <li><code>git restore ファイル名</code></li>
+            </ul>
+            <p>git restoreコマンドの —stagedオプションを使うと、ステージングエリアへの間違った登録を取り消せる。</p>
+            <ul>
+                <li><code>git restore --staged ファイル名</code></li>
+            </ul>
+
+            <h3>Gitの管理下にあるファイルの削除</h3>
+            <p>Gitの管理下にあるファイルは、エクスプローラーなどで削除しただけでは不十分である。「削除」をステージングエリアに登録し、コミットする必要がある。<br>
+            （エクスプローラーなどで）ファイル削除 → 削除したファイルをステージング → 削除のコメントつけてコミット<br>
+            が流れだが、最初の「削除＋ステージング」は git rmコマンドで同時にやってくれる。</p>
+            <ul>
+                <li><code>git rm ファイル名</code>
+                    <ul>
+                        <li>ディレクトリの削除の場合は-rオプションが必要。recursive(再帰的)</li>
+                        <li><code>git rm -r ディレクトリパス</code></li>
+                    </ul>
+                </li>
+                <li><code>ls</code></li>
+                <li><code>git status</code></li>
+                <li><code>git commit -m "メッセージ内容"</code></li>
+            </ul>
+
+            <h3>Gitで管理しないファイルの設定</h3>
+            <p>ログファイルやバックアップファイル、パスワードが書かれたファイルはGitで管理すべきではない。リモートリポジトリを共有しているメンバーに公開されるということを念頭に置く。</p>
+            <ul>
+                <li>「.git」ディレクトリと同じディレクトリに「.gitignore」ファイルを作成する。</li>
+                <li>.gitignoreファイルに無視したいファイル名やディレクトリ名を書く。</li>
+                <li><code>git add .gitignore</code></li>
+                <li><code>git commit -m ".gitignoreファイルを追加する"</code></li>
+            </ul>
+
+            <h3>コミットの履歴を確認</h3>
+            <p>git logコマンドを実行すると、新しい順で「コミットハッシュ」「誰がコミットをしたか」「コミット日時」「コミットメッセージ」が表示される。-pオプションを付けるとファイルの差分も確認できる。</p>
+            <ul>
+                <li><code>git log</code></li>
+                <li><code>git log -p</code></li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <section id="fork-clone">
+            <h2>フォークとクローン</h2>
+
+            <h3>フォーク</h3>
+            <p>リモートリポジトリ間でのやり取り。他人のアカウントのリポジトリを自分の(GitHub)アカウントに複製することをフォークという。自分のアカウントに持ってこれば、オリジナルに影響を与えることなくファイルの編集ができる。一般的には共同開発をしたいリポジトリをフォークして、こちら側で変更を加えた後、最終的にフォーク元のオリジナルへその変更を反映させるという使い方をする。</p>
+            <ul>
+                <li>フォークしたいリポジトリを表示した状態で、右上にある [Fork] をクリック。</li>
+                <li>[Owner] が自分のアカウント名になっているか確認</li>
+                <li>[Repository name] と [Description] は変更したければ編集</li>
+                <li>コピーするブランチのチェックボックスはチェックしたまま</li>
+                <li>[Crate fork] をクリック</li>
+            </ul>
+
+            <h3>クローン</h3>
+            <p>リモートリポジトリをローカルリポジトリとしてコピーする操作をクローンという。最初にリモートリポジトリを特定するためのURLをGitHub上で取得する。実行したディレクトリにクローンしたディレクトリが作られる。</p>
+            <ul>
+                <li>クローンしたいリモートリポジトリを開き、[Code]をクリック</li>
+                <li>[SSH]タブにあるURLをコピー</li>
+                <li><code>git clone 貼り付けたURL</code>
+                    <ul>
+                        <li>[shift]+[Insert] キーで貼り付けができる</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p>※復習：ローカルリポジトリを作るには git init をしていた。git clone コマンドはもう一つの作成方法なのだ。</p>
+
+            <p>リモートリポジトリの設定を確認してみる。</p>
+            <ul>
+                <li><code>git remote -v</code>
+                    <ul>
+                        <li>origin という文字のあとにクローン元のURLが表示されている</li>
+                        <li>origin はリモートリポジトリの名前だが、変えることもできる</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>ローカルリポジトリをGitHubにアップする</h3>
+            <p><a href="https://hirofurukawa.com/push-local-repos-to-github/" target="_blank">ローカルで作業した git リポジトリを GitHub にアップする手順</a></p>
+        </section>
+
+        <hr>
+
+        <section id="branch-section">
+            <h3>ブランチ</h3>
+            <p>ブランチはGitで記録する履歴を枝分かれさせるための機能。作業内容ごとに別々に管理できる。</p>
+
+            <h3>ブランチを作成して切り替える</h3>
+            <ul>
+                <li><code>git branch ブランチ名</code></li>
+                <li><code>git branch</code> ← ブランチの確認</li>
+                <li><code>git switch ブランチ名</code></li>
+            </ul>
+
+            <p>作成とスイッチはgit switchの-cオプションで同時に行うことができる。</p>
+            <ul>
+                <li><code>git switch -c ブランチ名</code>
+                    <ul>
+                        <li><code>git checkout -b ブランチ名</code> でも同じことができる</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>ブランチ同士の差異の確認</h3>
+            <p>今使っているブランチとほかのブランチを比較できる。</p>
+            <ul>
+                <li><code>git diff ブランチ名</code>
+                    <ul>
+                        <li><code>git diff main</code></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>mainブランチにトピックブランチの変更を反映させる（ローカル内）</h3>
+            <p>まずmainブランチに移動して、マージを行う。</p>
+            <ul>
+                <li><code>git switch main</code></li>
+                <li><code>git merge ブランチ名</code></li>
+            </ul>
+
+            <h3>プルリクエストの作成（リモートリポジトリが絡む）</h3>
+            <p>作成したブランチの取り込み（マージ）を依頼するのがプルリクエスト。流れとしては、まずローカルのブランチの状態をリモートに「プッシュ」することで、リモートリポジトリにも同じブランチが作成される（コピーした）。このリモートのブランチを、リモートのmainブランチに反映させたいのだが、反映させていいのかどうか議論したい（レビューしてもらいたい）。その議論のリクエストがプルリクエストなのである。プルリクエストの作成はGitHub上で行う。リクエストするブランチを選択するわけだ。</p>
+            <ul>
+                <li><code>git push origin ブランチ名</code></li>
+                <li>GitHubを開き、[Pull request] から[New pull request] を選択</li>
+                <li>左のベースブランチに自分のアカウントのリモートリポジトリを選択</li>
+                <li>右ではレビュー対象のブランチを選択する</li>
+                <li>タイトルとコメントを書く。変更内容や背景をマークダウンで書き、わかりやすくする。</li>
+                <li>レビューをお願いしたい場合は右の[Reviewers]でユーザー名を選択する</li>
+                <li>[Create pull request] で作成完了</li>
+            </ul>
+
+            <h3>ブランチの削除</h3>
+            <p>ローカルリポジトリのブランチだけでなく、リモートリポジトリのブランチも削除できる。</p>
+
+            <p>ローカルリポジトリのマージ済みのブランチの削除</p>
+            <ul>
+                <li><code>git branch --delete ブランチ名</code>
+                    <ul>
+                        <li><code>git branch -d ブランチ名</code> でもOK</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p>ローカルリポジトリのマージ状況に関わらずブランチを削除</p>
+            <ul>
+                <li><code>git branch -D ブランチ名</code></li>
+            </ul>
+
+            <p>リモートリポジトリのブランチの削除</p>
+            <ul>
+                <li><code>git push --delete origin ブランチ名</code>
+                    <ul>
+                        <li><code>git push origin :ブランチ名</code> でもOK</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <hr>
+
+            <h3>ローカルリポジトリのmainブランチを最新化する</h3>
+            <p>リモートリポジトリの最新状態をローカルリポジトリに反映させる際は、まずローカルリポジトリをmainブランチに切り替えてからpullする。</p>
+            <ul>
+                <li><code>git switch main</code></li>
+                <li><code>git pull origin main</code></li>
+            </ul>
+
+            <h3>トピックブランチに最新のmainブランチを反映させる（ローカル）</h3>
+            <p>まず反映させたいトピックブランチに移動してからマージする</p>
+            <ul>
+                <li><code>git switch ブランチ名</code></li>
+                <li><code>git merge main</code></li>
+            </ul>
+
+            <h3>コンフリクトの発生</h3>
+            <p>まずgit statusで確認</p>
+            <ul>
+                <li><code>git status</code></li>
+                <li>「both modified」→ マージ先とマージ元の両ブランチで変更を加えた</li>
+                <li>「you」→ マージ元である現在使用中のブランチのこと</li>
+                <li>「them」→ マージ先のブランチのこと</li>
+                <li>「deleted by them」→ 使用中のブランチで編集したファイルがマージ先のブランチで削除されていた</li>
+                <li>プルリクエスト中だった場合、githubにもコンフリクトメッセージがでてマージできなくなっているが、ローカルで解消してプッシュすれば解消される。</li>
+            </ul>
+
+            <p>VSCodeでは以下のようになっている。</p>
+
+            <img src="image/image1.png" alt="コンフリクト発生画面">
+
+            <p>&lt;&lt;&lt;から&gt;&gt;&gt;までの行がコンフリクトしている箇所、===の行がマージ先とマージ元の変更箇所の境目。２つを融合したものに変更する。&gt;&gt;&gt;とかも消す。</p>
+            <ul>
+                <li><code>ファイルの編集</code></li>
+            </ul>
+
+            <img src="image/image2.png" alt="ファイルの編集画面">
+
+            <p>編集が完了したらステージングエリアに追加する。git statusでファイルの編集を確認。</p>
+            <ul>
+                <li><code>git add -A</code></li>
+                <li><code>git status</code></li>
+            </ul>
+
+            <img src="image/image3.png" alt="コンフリクト解消画面">
+
+            <p>All conflicts fixed とある。コンフリクトにより失敗したマージは、解消してコミットを行うまでマージしている最中（マージが未完）であるとみなされる。パラメーターなしでコミットすれば完了。コミットメッセージが入力された状態でエディターが立ち上がるが、何も編集せずに閉じればよい。</p>
+            <ul>
+                <li><code>git commit</code></li>
+            </ul>
+
+            <p>解消したらプッシュする</p>
+            <ul>
+                <li><code>git push origin ブランチ名</code></li>
+            </ul>
+
+            <p>プルリクエストでコンフリクトメッセージが出ていた場合は、これにてマージができるようになっている。</p>
+        </section>
+
+        <section id="solo">
+            <h2>ひとりでGit/GitHubを嗜む</h2>
+            <ul>
+                <li>ローカルリポジトリを作成したいところで <code>git init</code></li>
+                <li>コミットがゼロだと何もできないので[Untracked]ファイルを <code>git add ファイル名</code> して <code>git commit -m “メッセージ”</code> する</li>
+                <li><code>git commit -am "メッセージ"</code> や <code>git branch ブランチ名</code> や <code>git merge ブランチ名</code> などでGitで管理</li>
+                <li>リモートリポジトリと連携したくなったら、まずGitHubで [New repository]</li>
+                <li>必要項目入力したら [Create repository]</li>
+                <li>SSH接続用のURLをコピーする</li>
+                <li>リモートリポジトリ名をoriginとするなら、次のコマンドを実行</li>
+                <li><code>git remote add origin コピーしたURL</code></li>
+                <li><code>git remote -v</code> を実行してリモートリポジトリのパスが出れば接続成功</li>
+                <li><code>git push origin main</code> でプッシュすれば完了</li>
+            </ul>
+        </section>
+
+        <section id="command-explanation">
+            <h2>コマンドの解説（詳細）</h2>
+            
+            <div id="exp-keygen" class="explanation-box">
+                <p>コマンドの解説</p>
+                <p>このコマンドは、GitHubなどのサーバーに安全に接続するための**「SSH鍵（秘密鍵と公開鍵のペア）」を作成する**ためのものです。</p>
+                <p>現在、セキュリティとパフォーマンスの両面で**最も推奨されている設定**のひとつです。</p>
+                
+                <hr>
+                
+                <h3>**コマンドの各部分の意味**</h3>
+                <ul>
+                    <li>**<code>ssh-keygen</code>**
+                        <ul>
+                            <li>SSHの鍵ペアを作成（生成）するためのプログラムを起動します。</li>
+                        </ul>
+                    </li>
+                    <li>**<code>t ed25519</code>**
+                        <ul>
+                            <li>作成する鍵の種類（アルゴリズム）を指定します。**Ed25519**は、従来のRSAよりも高速で、短い鍵長でも非常に高いセキュリティを誇る最新の形式です。</li>
+                        </ul>
+                    </li>
+                    <li>**<code>C "example@gmail.com"</code>**
+                        <ul>
+                            <li>鍵に「コメント（Comment）」を付けます。一般的には自分のメールアドレスを入力し、**「誰の、どのための鍵か」を識別しやすくする**ために使われます。</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <h3>**生成されるファイル**</h3>
+                <p>成功すると、指定した場所に**2つのファイル**がセットで作成されます。</p>
+                <ul>
+                    <li><code>id_ed25519</code> （**秘密鍵**: 自分だけの印鑑。**絶対に見せてはいけない**）</li>
+                    <li><code>id_ed25519.pub</code> （**公開鍵**: 相手に渡す鍵。GitHubの設定画面などに中身を貼り付ける）</li>
+                </ul>
+                <p>この鍵を作成したあとは、GitHubなどの設定画面に「公開鍵（.pubの方）」を登録することで、パスワード入力を省略して安全に通信ができるようになります。</p>
+            </div>
+
+            <div id="exp-ssh-test" class="explanation-box">
+                <p>コマンドの解説</p>
+                <p>このコマンドは、設定したSSH鍵を使って**GitHubとの接続が正しく行えるかを確認する「テストコマンド」**です。</p>
+                <p>新しくSSH鍵を作成してGitHubに登録したあと、実際にGit操作（pushやpull）をする前に、ちゃんと通信できるかをチェックするために使います。</p>
+                
+                <hr>
+                
+                <h3>**コマンドの各部分の意味**</h3>
+                <ul>
+                    <li>**<code>ssh</code>**
+                        <ul>
+                            <li>SSH（セキュアな通信）を使ってサーバーに接続する命令です。</li>
+                        </ul>
+                    </li>
+                    <li>**<code>T</code>**
+                        <ul>
+                            <li>「対話的な端末（ターミナル）を割り当てない」という指示です。</li>
+                            <li>GitHubのサーバーは、SSHで接続しても操作画面（シェル）を貸してくれません。このオプションを付けることで、「操作したいわけじゃなくて、**接続できるか確認したいだけです**」と伝えています。</li>
+                        </ul>
+                    </li>
+                    <li>**<code>git@github.com</code>**
+                        <ul>
+                            <li>接続先のアドレスです。GitHubの場合、ユーザー名は必ず <code>git</code> になります。</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
